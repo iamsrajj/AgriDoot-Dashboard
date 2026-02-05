@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -33,7 +33,11 @@
       }
 
       body {
-        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont;
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont;
         background: var(--bg);
         color: var(--text);
       }
@@ -43,7 +47,8 @@
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 16px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04),
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, 0.04),
           0 8px 24px rgba(0, 0, 0, 0.04);
       }
 
@@ -542,10 +547,14 @@
       const GOOGLE_CLIENT_ID =
         "720727892020-rtfm0ej4t214f04kejpuqbovii6nb95f.apps.googleusercontent.com"; // ← replace
       const API_BASE = "https://api.novosedge.xyz:4433/ad/dev";
+      const novoApiKey = "agridoot_2307e123cefd632b33b4ce9ff9bef7db";
       // Whitelist: either provide a file named
       //   ./whitelist.json  -> ["allowed@mail.com", ...]
       // or edit the fallback array below.
-      const FALLBACK_WHITELIST = ["shashwatraj98765@gmail.com", "agridoot.novosedge@gmail.com"]; // ← change or leave empty if using file
+      const FALLBACK_WHITELIST = [
+        "shashwatraj98765@gmail.com",
+        "agridoot.novosedge@gmail.com",
+      ]; // ← change or leave empty if using file
 
       /*************************
        * Utilities
@@ -808,9 +817,8 @@
           qs("#di_type").textContent = dev_type;
           qs("#di_imei").textContent = imei;
           qs("#di_serial").textContent = serial_no;
-          qs(
-            "#di_map"
-          ).href = `https://www.google.com/maps?q=${dev_lat},${dev_lon}`;
+          qs("#di_map").href =
+            `https://www.google.com/maps?q=${dev_lat},${dev_lon}`;
 
           /* STEP 2: FETCH DEVICE DATA */
           const dataResp = await apiGetDeviceData({
@@ -997,7 +1005,12 @@
         const url = new URL(API_BASE + "/list");
         if (serial && serial.trim())
           url.searchParams.set("serial_no", serial.trim());
-        const res = await fetch(url, { method: "GET" });
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            "x-api-key": novoApiKey,
+          },
+        });
         if (!res.ok) throw new Error("List fetch failed: " + res.status);
         return res.json();
       }
@@ -1007,6 +1020,9 @@
         Object.entries(data).forEach(([k, v]) => formData.append(k, v));
         const res = await fetch(API_BASE + "/reg", {
           method: "POST",
+          headers: {
+            "x-api-key": novoApiKey,
+          },
           body: formData,
         });
         const text = await res.text();
@@ -1022,7 +1038,7 @@
         }
         if (!res.ok)
           throw new Error(
-            (payload && payload.message) || "Registration failed"
+            (payload && payload.message) || "Registration failed",
           );
         return { status: res.status, payload };
       }
@@ -1032,7 +1048,12 @@
        *************************/
       async function apiGetDeviceByPhone(phone, cc = "91") {
         const url = `https://api.novosedge.xyz:4433/ad/user/login?cc=${cc}&phone=${phone}`;
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          headers: {
+            "x-api-key": novoApiKey,
+          },
+          timeout: 10000,
+        });
         if (!res.ok) throw new Error("User lookup failed");
         return res.json();
       }
@@ -1053,7 +1074,11 @@
         url.searchParams.set("page", page);
         url.searchParams.set("per_page", per_page);
 
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          headers: {
+            "x-api-key": novoApiKey,
+          },
+        });
         if (!res.ok) throw new Error("Device data fetch failed");
         return res.json();
       }
@@ -1102,10 +1127,10 @@
        * UI — List & search (dynamic columns)
        *************************/
       qs("#refreshBtn").addEventListener("click", () =>
-        loadDeviceList(qs("#searchSerial").value)
+        loadDeviceList(qs("#searchSerial").value),
       );
       qs("#searchBtn").addEventListener("click", () =>
-        loadDeviceList(qs("#searchSerial").value)
+        loadDeviceList(qs("#searchSerial").value),
       );
       qs("#searchSerial").addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
@@ -1125,7 +1150,7 @@
           rows.reduce((set, r) => {
             Object.keys(r || {}).forEach((k) => set.add(k));
             return set;
-          }, new Set())
+          }, new Set()),
         );
         // Header
         cols.forEach((k) => {
@@ -1216,7 +1241,7 @@
             // search first array value
             if (payload && typeof payload === "object") {
               const firstArr = Object.values(payload).find((v) =>
-                Array.isArray(v)
+                Array.isArray(v),
               );
               if (Array.isArray(firstArr)) return firstArr;
             }
@@ -1242,4 +1267,3 @@
     </script>
   </body>
 </html>
-
