@@ -647,7 +647,11 @@
       }
 
       function fetchSummary() {
-        fetch("https://api.novosedge.xyz:4433/ad/live")
+        fetch("https://api.novosedge.xyz:4433/ad/live", {
+          headers: {
+            "X-API-KEY": "agridoot_2307e123cefd632b33b4ce9ff9bef7db",
+          },
+        })
           .then((r) => r.json())
           .then((data) => {
             const s = data.summary || {};
@@ -672,7 +676,11 @@
 
       function fetchUserCounts() {
         const period = document.getElementById("period").value;
-        fetch(`https://api.novosedge.xyz:4433/ad/counts?period=${period}`)
+        fetch(`https://api.novosedge.xyz:4433/ad/counts?period=${period}`, {
+          headers: {
+            "X-API-KEY": "agridoot_2307e123cefd632b33b4ce9ff9bef7db",
+          },
+        })
           .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
           .then((data) => {
             if (!data.infoUser) return;
@@ -816,7 +824,12 @@
         const type = $("#user-type").value;
         const search = encodeURIComponent($("#search").value || "");
         fetch(
-          `https://api.novosedge.xyz:4433/ad/analytics?type=${type}&page=${page}&search=${search}`
+          `https://api.novosedge.xyz:4433/ad/analytics?type=${type}&page=${page}&search=${search}`,
+          {
+            headers: {
+              "X-API-KEY": "agridoot_2307e123cefd632b33b4ce9ff9bef7db",
+            },
+          },
         )
           .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
           .then((data) => {
@@ -939,3 +952,4 @@
     </script>
   </body>
 </html>
+
