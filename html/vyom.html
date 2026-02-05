@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -386,7 +386,7 @@
         <select id="satellite-index" name="satellite-index" required>
           <!-- options omitted for brevity (same as original) -->
           <optgroup label="Sentinel-1">
-            <option value="SMI" data-satellite="Sentinel-1" selected>
+            <option value="SMI" data-satellite="Sentinel-1">
               SMI - Soil Moisture Index
             </option>
             <option value="RSM" data-satellite="Sentinel-1">
@@ -427,7 +427,7 @@
             <option value="NDRE" data-satellite="Sentinel-2">
               NDRE - Normalized Difference Red Edge Index (B05, B08)
             </option>
-            <option value="NDVI" data-satellite="Sentinel-2">
+            <option value="NDVI" data-satellite="Sentinel-2" selected>
               NDVI - Normalized Difference Vegetation Index
             </option>
             <option value="NDWI" data-satellite="Sentinel-2">
@@ -695,11 +695,16 @@
       // NOTE: api base left as in your original file
       const novoBase = "https://api.novosedge.xyz:4433";
       const weatherBase = "https://apiv2.agridoot.co.in:12443";
-      const weatherApiKey = "agridoot_a7c3d1f905be4d67b14fa12e5e8c32bd";
+      const novoApiKey = "agridoot_2307e123cefd632b33b4ce9ff9bef7db";
 
       async function fetchUserIdFromPhone(phone) {
         const url = `${novoBase}/ad/user/login?cc=91&phone=${phone}`;
-        const resp = await axios.get(url);
+        const resp = await axios.get(url, {
+          headers: {
+            "x-api-key": novoApiKey,
+          },
+          timeout: 10000,
+        });
         if (resp.data?.response_status) {
           return resp.data.userDetails.user_id;
         }
@@ -709,7 +714,12 @@
       async function fetchPolygonsForUser(user_id) {
         const form = new FormData();
         form.append("user_id", user_id);
-        const resp = await axios.post(`${novoBase}/gis/list`, form);
+        const resp = await axios.post(`${novoBase}/gis/list`, form, {
+          headers: {
+            "x-api-key": novoApiKey,
+          },
+          timeout: 10000,
+        });
         return resp.data?.farmList || [];
       }
 
@@ -721,9 +731,9 @@
           const opt = document.createElement("option");
           opt.value = farm.polygon_id;
           opt.innerHTML = `
-      ${farm.polygon_name}
-      (${farm.polygon_id})
-    `;
+        ${farm.polygon_name}
+        (${farm.polygon_id})
+      `;
           opt.dataset.pid = farm.polygon_id;
           elements.polygonSelect.appendChild(opt);
         });
@@ -732,7 +742,7 @@
       elements.indexDropdown.addEventListener("change", () => {
         const satellite =
           elements.indexDropdown.selectedOptions[0].getAttribute(
-            "data-satellite"
+            "data-satellite",
           );
         elements.satelliteTypeInput.value = satellite || "";
         validateForm();
@@ -774,7 +784,7 @@
       });
 
       [elements.polygonIdInput].forEach((input) =>
-        input.addEventListener("input", validateForm)
+        input.addEventListener("input", validateForm),
       );
 
       elements.polygonIdInput.addEventListener("blur", () => {
@@ -811,11 +821,16 @@
           formData.append("user_id", user_id);
           formData.append("polygon_id", polygon_id);
           if (plan_variant) formData.append("plan_variant", plan_variant);
-          const resp = await axios.post(`${novoBase}/gis/raw`, formData);
+          const resp = await axios.post(`${novoBase}/gis/raw`, formData, {
+            headers: {
+              "x-api-key": novoApiKey,
+            },
+            timeout: 10000,
+          });
           const data = resp.data || {};
           const sources = data?.farmRaw?.raw_data?.[0]?.sources || [];
           const matched = sources.find(
-            (s) => s.name?.toLowerCase() === satellite.toLowerCase()
+            (s) => s.name?.toLowerCase() === satellite.toLowerCase(),
           );
           const validDates = matched?.valid_observations || [];
           if (validDates.length > 0) {
@@ -831,7 +846,7 @@
             obsDateInput.value = "";
             if (obsDateInput._flatpickr) obsDateInput._flatpickr.destroy();
             console.warn(
-              `No observation dates found for ${satellite} on polygon ${polygon_id}`
+              `No observation dates found for ${satellite} on polygon ${polygon_id}`,
             );
           }
         } catch (err) {
@@ -862,7 +877,7 @@
         const [topLeft, bottomRight] = bounds;
         const tileBounds = new google.maps.LatLngBounds(
           new google.maps.LatLng(bottomRight[0], topLeft[1]),
-          new google.maps.LatLng(topLeft[0], bottomRight[1])
+          new google.maps.LatLng(topLeft[0], bottomRight[1]),
         );
         const overlay = new google.maps.GroundOverlay(tilePath, tileBounds);
         overlay.setMap(map);
@@ -911,7 +926,12 @@
         try {
           const form = new FormData();
           form.append("polygon_id", polygon_id);
-          const resp = await axios.post(`${novoBase}/gis/list`, form);
+          const resp = await axios.post(`${novoBase}/gis/list`, form, {
+            headers: {
+              "x-api-key": novoApiKey,
+            },
+            timeout: 10000,
+          });
           const d = resp.data || {};
           if (d && Array.isArray(d.farmList) && d.farmList.length > 0) {
             const farm = d.farmList[0];
@@ -959,7 +979,7 @@
           const d = new Date(dateStr);
           if (isNaN(d)) return null;
           const diff = Math.floor(
-            (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)
+            (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24),
           );
           return diff;
         } catch (e) {
@@ -973,7 +993,7 @@
           nf(farm.polygon_name) || "Polygon details";
         const area = nf(farm.polygon_area_acre);
         elements.farmSub.textContent = `ID: ${nf(
-          farm.polygon_id
+          farm.polygon_id,
         )} · Area: ${area} acre`;
 
         // plan summary top-right
@@ -1010,8 +1030,8 @@
             (daysLeft <= 3
               ? "days-red"
               : daysLeft <= 14
-              ? "days-yellow"
-              : "days-green");
+                ? "days-yellow"
+                : "days-green");
         }
 
         // user info
@@ -1167,7 +1187,7 @@
         }
 
         elements.polygonMeta.textContent = `Plan duration: ${nf(
-          farm.plan_dur
+          farm.plan_dur,
         )} months`;
         elements.farmInfoCard.style.display = "block";
       }
@@ -1197,7 +1217,12 @@
           const plan_variant = planVariantInput?.value?.trim() || "";
           if (plan_variant) formData.append("plan_variant", plan_variant);
           try {
-            const resp = await axios.post(`${novoBase}/gis/tiles`, formData);
+            const resp = await axios.post(`${novoBase}/gis/tiles`, formData, {
+              headers: {
+                "x-api-key": novoApiKey,
+              },
+              timeout: 10000,
+            });
             const data = resp.data || {};
             const tileList = data?.tileInfo?.tile_path;
             if (data.response_status && tileList && tileList.length > 0) {
@@ -1249,12 +1274,12 @@
        */
       async function fetchWeather(lat, lon) {
         const url = `${weatherBase}/ad/v2/weather/forecast?lat=${encodeURIComponent(
-          lat
+          lat,
         )}&lon=${encodeURIComponent(lon)}`;
         try {
           const resp = await axios.get(url, {
             headers: {
-              "x-api-key": weatherApiKey,
+              "x-api-key": novoApiKey,
             },
             timeout: 10000,
           });
@@ -1294,39 +1319,39 @@
 
         // current details
         currentBox.innerHTML = `
-          <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <div class="weather-block">
-              <div style="font-weight:700">Temp</div>
-              <div>${w.current?.temperature ?? "-"} °C</div>
-              <div class="meta-small">Feels: ${
-                w.current?.realfeel_temperature ?? "-"
-              } °C</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <div class="weather-block">
+                <div style="font-weight:700">Temp</div>
+                <div>${w.current?.temperature ?? "-"} °C</div>
+                <div class="meta-small">Feels: ${
+                  w.current?.realfeel_temperature ?? "-"
+                } °C</div>
+              </div>
+              <div class="weather-block">
+                <div style="font-weight:700">Humidity</div>
+                <div>${w.current?.relative_humidity ?? "-"} %</div>
+                <div class="meta-small">Precip: ${
+                  w.current?.precipitation_summary ?? "-"
+                }</div>
+              </div>
+              <div class="weather-block">
+                <div style="font-weight:700">Wind</div>
+                <div>${w.current?.wind_speed ?? "-"} km/h ${
+                  w.current?.wind_direction ?? ""
+                }</div>
+                <div class="meta-small">Visibility: ${
+                  w.current?.visibility ?? "-"
+                } km</div>
+              </div>
+              <div class="weather-block">
+                <div style="font-weight:700">Pressure</div>
+                <div>${w.current?.pressure ?? "-"} hPa</div>
+                <div class="meta-small">UV: ${w.current?.uv_index ?? "-"} (${
+                  w.current?.uv_index_text ?? "-"
+                })</div>
+              </div>
             </div>
-            <div class="weather-block">
-              <div style="font-weight:700">Humidity</div>
-              <div>${w.current?.relative_humidity ?? "-"} %</div>
-              <div class="meta-small">Precip: ${
-                w.current?.precipitation_summary ?? "-"
-              }</div>
-            </div>
-            <div class="weather-block">
-              <div style="font-weight:700">Wind</div>
-              <div>${w.current?.wind_speed ?? "-"} km/h ${
-          w.current?.wind_direction ?? ""
-        }</div>
-              <div class="meta-small">Visibility: ${
-                w.current?.visibility ?? "-"
-              } km</div>
-            </div>
-            <div class="weather-block">
-              <div style="font-weight:700">Pressure</div>
-              <div>${w.current?.pressure ?? "-"} hPa</div>
-              <div class="meta-small">UV: ${w.current?.uv_index ?? "-"} (${
-          w.current?.uv_index_text ?? "-"
-        })</div>
-            </div>
-          </div>
-        `;
+          `;
 
         // hourly: show first 6 (or fewer)
         hourlyBox.innerHTML = "";
@@ -1349,14 +1374,16 @@
             const div = document.createElement("div");
             div.className = "weather-block";
             div.innerHTML = `
-              <div style="font-weight:700">${
-                isNaN(Date.parse(time)) ? time : new Date(time).toLocaleString()
-              }</div>
-              <div>${
-                temp !== undefined && temp !== null ? temp + "°C" : "-"
-              }</div>
-              <div class="meta-small">${icon} · Hum: ${hum}</div>
-            `;
+                <div style="font-weight:700">${
+                  isNaN(Date.parse(time))
+                    ? time
+                    : new Date(time).toLocaleString()
+                }</div>
+                <div>${
+                  temp !== undefined && temp !== null ? temp + "°C" : "-"
+                }</div>
+                <div class="meta-small">${icon} · Hum: ${hum}</div>
+              `;
             hourlyBox.appendChild(div);
           });
         }
@@ -1383,14 +1410,14 @@
             const block = document.createElement("div");
             block.className = "weather-block";
             block.innerHTML = `
-              <div style="font-weight:700">${
-                isNaN(Date.parse(date))
-                  ? date
-                  : new Date(date).toLocaleDateString()
-              }</div>
-              <div>${iconPhrase}</div>
-              <div class="meta-small">T: ${tmin}° / ${tmax}° · Rain: ${rainProb}% · UV: ${uv}</div>
-            `;
+                <div style="font-weight:700">${
+                  isNaN(Date.parse(date))
+                    ? date
+                    : new Date(date).toLocaleDateString()
+                }</div>
+                <div>${iconPhrase}</div>
+                <div class="meta-small">T: ${tmin}° / ${tmax}° · Rain: ${rainProb}% · UV: ${uv}</div>
+              `;
             dailyBox.appendChild(block);
           });
         }
@@ -1482,7 +1509,7 @@
         sowingISO,
         lat,
         lon,
-        lang = "English"
+        lang = "English",
       ) {
         try {
           const sanitized = sanitizeForServerKey(cropLabel);
@@ -1496,7 +1523,13 @@
             lang: lang,
             crop_label: cropLabel,
           };
-          const resp = await axios.get(url, { params, timeout: 12000 });
+          const resp = await axios.get(url, {
+            params,
+            timeout: 12000,
+            headers: {
+              "x-api-key": novoApiKey,
+            },
+          });
           return resp.data;
         } catch (err) {
           console.error("fetchWeaSugg error:", err);
@@ -1650,7 +1683,7 @@
                 p.sowingISO,
                 coords.lat,
                 coords.lon,
-                lang
+                lang,
               );
               // attach metadata for UI (original crop label & sowing)
               if (res && typeof res === "object") {
@@ -1728,5 +1761,3 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   </body>
 </html>
-
-
