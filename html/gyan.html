@@ -308,6 +308,9 @@
 
         fetch("https://api.novosedge.xyz:4433/ad/v1.5/gyan", {
           method: "POST",
+          headers: {
+            "X-API-KEY": "agridoot_2307e123cefd632b33b4ce9ff9bef7db",
+          },
           body: fd,
         })
           .then((r) => r.json())
@@ -332,6 +335,9 @@
 
         fetch("https://api.novosedge.xyz:4433/ad/v1.5/gyan/vision", {
           method: "POST",
+          headers: {
+            "X-API-KEY": "agridoot_2307e123cefd632b33b4ce9ff9bef7db",
+          },
           body: fd,
         })
           .then((r) => r.json())
@@ -343,4 +349,5 @@
     </script>
   </body>
 </html>
+
 
