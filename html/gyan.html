@@ -1,353 +1,431 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="robots" content="noindex,nofollow" />
-    <title>AgriDoot - GYAN AI</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/img/agfav.ico" />
+    <title>AgriDoot - Gyan AI</title>
+    <link rel="icon" type="image/x-icon" href="/img/agfav.ico" />
 
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-
-    <!-- ✅ MARKDOWN PARSER -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <!-- Guard script -->
-    <script src="/js/guard.js"></script>
+    <!-- ✅ Stable Cropper CDN (FIXED) -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
     <style>
-      :root {
-        --bg: #f8fafc;
-        --panel: #ffffff;
-        --border: #e5e7eb;
-        --primary: #16a34a;
-        --primary-soft: #dcfce7;
-        --text: #111827;
-        --muted: #6b7280;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
       body {
         margin: 0;
-        font-family: "Inter", system-ui;
-        background: linear-gradient(180deg, #f0fdf4, #f8fafc);
-        color: var(--text);
-        min-height: 100vh;
+        font-family: Inter;
+        background: #f4f7fb;
         display: flex;
         flex-direction: column;
+        height: 100vh;
       }
 
       header {
-        padding: 18px 24px;
-        border-bottom: 1px solid var(--border);
-        background: #ffffffcc;
-        backdrop-filter: blur(10px);
-      }
-
-      header h1 {
-        margin: 0;
-        font-size: 18px;
+        padding: 16px 24px;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
         font-weight: 600;
-      }
-
-      header span {
-        color: var(--primary);
       }
 
       main {
         flex: 1;
-        display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 18px;
-        padding: 18px;
-      }
-
-      @media (max-width: 900px) {
-        main {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      /* CHAT */
-      .chat-panel {
+        max-width: 900px;
+        margin: auto;
+        width: 100%;
+        padding: 20px;
         display: flex;
         flex-direction: column;
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
-        overflow: hidden;
       }
 
-      .chat-header {
-        padding: 14px 18px;
-        font-weight: 600;
-        border-bottom: 1px solid var(--border);
-        background: #f9fafb;
+      .chat-container {
+        flex: 1;
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      }
+
+      .samples {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
+      }
+
+      .sample-btn {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid #e5e7eb;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .sample-btn:hover {
+        background: #f0fdf4;
+        border-color: #22c55e;
+        color: #16a34a;
       }
 
       .chat-body {
         flex: 1;
-        padding: 18px;
         overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .bubble {
-        max-width: 78%;
-        padding: 14px 16px;
-        border-radius: 14px;
-        line-height: 1.6;
-        font-size: 14px;
-      }
-
-      .user {
-        align-self: flex-end;
-        background: var(--primary-soft);
-        color: #065f46;
-        border-bottom-right-radius: 4px;
-      }
-
-      .ai {
-        align-self: flex-start;
-        background: #ffffff;
-        border: 1px solid var(--border);
-        border-bottom-left-radius: 4px;
-      }
-
-      /* MARKDOWN STYLES */
-      .ai h1,
-      .ai h2,
-      .ai h3 {
-        color: var(--primary);
-        margin: 10px 0 6px;
-      }
-
-      .ai ul {
-        padding-left: 20px;
-        margin: 8px 0;
-      }
-
-      .ai li {
-        margin-bottom: 6px;
-      }
-
-      .ai code {
-        background: #f3f4f6;
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 13px;
-      }
-
-      .chat-input {
-        padding: 14px;
-        display: flex;
-        gap: 10px;
-        border-top: 1px solid var(--border);
-      }
-
-      textarea {
-        flex: 1;
-        resize: none;
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-      }
-
-      textarea:focus {
-        outline: none;
-        border-color: var(--primary);
-      }
-
-      button {
-        padding: 0 18px;
-        border-radius: 12px;
-        border: none;
-        background: var(--primary);
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-      }
-
-      button:hover {
-        background: #15803d;
-      }
-
-      /* VISION */
-      .vision-panel {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 16px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
         display: flex;
         flex-direction: column;
         gap: 12px;
       }
 
-      select,
-      input[type="file"] {
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
+      .bubble {
+        max-width: 75%;
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-size: 14px;
       }
 
-      .vision-output {
-        display: none;
-        background: #ffffff;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 14px;
-        line-height: 1.6;
+      .user {
+        align-self: flex-end;
+        background: #22c55e;
+        color: white;
       }
 
-      .med-pill {
-        display: inline-flex;
+      .ai {
+        align-self: flex-start;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+      }
+
+      .chat-input {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
         align-items: center;
-        padding: 6px 14px;
-        margin: 6px 6px 0 0;
-        border-radius: 999px;
-        background: #ecfdf5;
-        border: 1px solid #a7f3d0;
-        color: #065f46;
-        font-size: 13px;
-        font-weight: 500;
+      }
+
+      textarea {
+        flex: 1;
+        resize: none;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .plus-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
       }
 
-      footer {
-        text-align: center;
-        padding: 10px;
-        font-size: 12px;
-        color: var(--muted);
+      button {
+        background: #22c55e;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 12px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #16a34a;
+      }
+
+      .image-preview {
+        margin-top: 10px;
+        display: none;
+      }
+
+      .image-preview img {
+        max-width: 220px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+      }
+
+      .image-actions {
+        margin-top: 8px;
+        display: flex;
+        gap: 10px;
+      }
+
+      #cropModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+      }
+
+      #cropBox {
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 600px;
+      }
+
+      #cropImage {
+        max-width: 100%;
+        display: block;
       }
     </style>
   </head>
 
   <body>
-    <header>
-      <h1>🌱 <span>Gyan AI</span> • AgriDoot</h1>
-    </header>
+    <header>🌱 Gyan AI • Smart Farming Assistant</header>
 
     <main>
-      <!-- CHAT -->
-      <section class="chat-panel">
-        <div class="chat-header">💬 Smart Farming Assistant</div>
+      <div class="chat-container">
+        <div id="samples" class="samples"></div>
         <div id="chat_box" class="chat-body"></div>
 
+        <div class="image-preview" id="imagePreview">
+          <img id="previewImg" />
+          <div class="image-actions">
+            <button onclick="openCrop()">Crop</button>
+            <button style="background: #ef4444" onclick="cancelImage()">
+              Cancel
+            </button>
+          </div>
+        </div>
+
         <div class="chat-input">
+          <div class="plus-btn" onclick="triggerImage()">+</div>
+          <input
+            type="file"
+            id="vision_image"
+            hidden
+            accept="image/*"
+            onchange="selectImage(event)"
+          />
           <textarea
             id="chat_query"
             rows="1"
-            placeholder="Ask about crop, disease, soil, weather…"
+            placeholder="Ask about crops, soil, weather..."
           ></textarea>
-          <button onclick="sendChat()">Send</button>
+          <button onclick="sendMessage()">Send</button>
         </div>
-      </section>
-
-      <!-- VISION -->
-      <section class="vision-panel">
-        <h3>📷 Gyan Vision</h3>
-
-        <select id="vision_lang">
-          <option value="hindi">Hindi</option>
-          <option value="english">English</option>
-          <option value="tamil">Tamil</option>
-          <option value="telugu">Telugu</option>
-          <option value="kannada">Kannada</option>
-          <option value="malayalam">Malayalam</option>
-          <option value="marathi">Marathi</option>
-          <option value="punjabi">Punjabi</option>
-        </select>
-
-        <input type="file" id="vision_image" accept="image/*" />
-        <button onclick="sendVision()" style="padding: 0.7rem">
-          Analyze Image
-        </button>
-
-        <div id="vision_output" class="vision-output"></div>
-      </section>
+      </div>
     </main>
 
-    <footer>Powered by <strong>Drona – Gyan AI</strong> | © NovosEdge</footer>
+    <!-- Crop Modal -->
+    <div id="cropModal">
+      <div id="cropBox">
+        <h3>Crop Image</h3>
+        <img id="cropImage" />
+        <div
+          style="
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+          "
+        >
+          <button
+            onclick="closeCrop()"
+            style="background: #e5e7eb; color: black"
+          >
+            Cancel
+          </button>
+          <button onclick="applyCrop()">Crop & Use</button>
+        </div>
+      </div>
+    </div>
 
     <script>
       const DEFAULT_USER_ID = 14;
 
-      // ✅ Proper Markdown Rendering
-      function renderMarkdown(text) {
-        return marked.parse(text, {
-          breaks: true,
-          gfm: true,
+      let cropper = null;
+      let selectedImageFile = null;
+      let croppedBlob = null;
+
+      /* Random Questions */
+      const questions = [
+        "Wheat yellow rust treatment?",
+        "Best fertilizer for paddy crop?",
+        "How to increase tomato yield?",
+        "Organic pest control methods?",
+        "Soil testing importance?",
+        "Drip irrigation benefits?",
+        "Best time to sow mustard?",
+        "Cotton leaf curl disease solution?",
+      ];
+
+      function loadSamples() {
+        const shuffled = [...questions].sort(() => 0.5 - Math.random());
+        const container = document.getElementById("samples");
+        container.innerHTML = "";
+        shuffled.slice(0, 5).forEach((q) => {
+          const btn = document.createElement("div");
+          btn.className = "sample-btn";
+          btn.innerText = q;
+          btn.onclick = () => {
+            chat_query.value = q;
+          };
+          container.appendChild(btn);
         });
       }
+      loadSamples();
 
-      function sendChat() {
-        const q = chat_query.value.trim();
-        if (!q) return;
+      /* Enter to send */
+      chat_query.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
 
-        chat_box.innerHTML += `<div class="bubble user">${q}</div>`;
+      /* Image Selection */
+      function triggerImage() {
+        vision_image.click();
+      }
+
+      function selectImage(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        selectedImageFile = file;
+        croppedBlob = null;
+
+        previewImg.src = URL.createObjectURL(file);
+        imagePreview.style.display = "block";
+      }
+
+      /* Cancel Image */
+      function cancelImage() {
+        vision_image.value = "";
+        selectedImageFile = null;
+        croppedBlob = null;
+        imagePreview.style.display = "none";
+      }
+
+      /* Open Crop */
+      function openCrop() {
+        if (!selectedImageFile) return;
+
+        const img = document.getElementById("cropImage");
+        img.src = previewImg.src;
+        cropModal.style.display = "flex";
+
+        img.onload = function () {
+          if (cropper) {
+            cropper.destroy();
+          }
+
+          cropper = new Cropper(img, {
+            viewMode: 1,
+            autoCropArea: 1,
+            responsive: true,
+            background: false,
+          });
+        };
+      }
+
+      /* Close Crop */
+      function closeCrop() {
+        cropModal.style.display = "none";
+        if (cropper) {
+          cropper.destroy();
+          cropper = null;
+        }
+      }
+
+      /* Apply Crop */
+      function applyCrop() {
+        if (!cropper) return;
+
+        const canvas = cropper.getCroppedCanvas();
+
+        canvas.toBlob(
+          function (blob) {
+            if (!blob) return alert("Crop failed");
+
+            croppedBlob = new File([blob], "cropped.jpg", {
+              type: "image/jpeg",
+            });
+
+            previewImg.src = canvas.toDataURL("image/jpeg", 0.9);
+            closeCrop();
+          },
+          "image/jpeg",
+          0.9,
+        );
+      }
+
+      /* Send Message */
+      function renderMarkdown(text) {
+        return marked.parse(text, { breaks: true, gfm: true });
+      }
+
+      function sendMessage() {
+        const text = chat_query.value.trim();
+        const img = croppedBlob || selectedImageFile;
+
+        if (!text && !img) return;
+
+        if (text) {
+          chat_box.innerHTML += `<div class="bubble user">${text}</div>`;
+        }
+
+        if (img) {
+          chat_box.innerHTML += `<div class="bubble user"><img src="${previewImg.src}" style="max-width:200px;border-radius:12px;"></div>`;
+        }
+
         chat_query.value = "";
+        imagePreview.style.display = "none";
+
+        selectedImageFile = null;
+        croppedBlob = null;
 
         const ai = document.createElement("div");
         ai.className = "bubble ai";
         ai.innerHTML = "⏳ Thinking...";
         chat_box.appendChild(ai);
+        chat_box.scrollTop = chat_box.scrollHeight;
 
         const fd = new FormData();
         fd.append("user_id", DEFAULT_USER_ID);
-        fd.append("query", q);
 
-        fetch("https://api.novosedge.xyz:4433/ad/v1.5/gyan", {
-          method: "POST",
-          headers: {
-            "X-API-KEY": "agridoot_2307e123cefd632b33b4ce9ff9bef7db",
-          },
-          body: fd,
-        })
-          .then((r) => r.json())
-          .then((d) => {
-            ai.innerHTML = renderMarkdown(d.dronaRes.ans);
-            chat_box.scrollTop = chat_box.scrollHeight;
+        if (img) {
+          fd.append("image", img, "cropped.jpg");
+          fetch("https://api.novosedge.xyz:4433/ad/v1.5/gyan/vision", {
+            method: "POST",
+            headers: {
+              "X-API-KEY": "agridoot_2307e123cefd632b33b4ce9ff9bef7db",
+            },
+            body: fd,
           })
-          .catch(() => (ai.innerHTML = "❌ Error"));
-      }
-
-      function sendVision() {
-        const img = vision_image.files[0];
-        if (!img) return alert("Please select an image");
-
-        vision_output.style.display = "block";
-        vision_output.innerHTML = "⏳ Analyzing image...";
-
-        const fd = new FormData();
-        fd.append("user_id", DEFAULT_USER_ID);
-        fd.append("lang", vision_lang.value);
-        fd.append("image", img);
-
-        fetch("https://api.novosedge.xyz:4433/ad/v1.5/gyan/vision", {
-          method: "POST",
-          headers: {
-            "X-API-KEY": "agridoot_2307e123cefd632b33b4ce9ff9bef7db",
-          },
-          body: fd,
-        })
-          .then((r) => r.json())
-          .then((d) => {
-            vision_output.innerHTML = renderMarkdown(d.dronaVis.ans);
+            .then((r) => r.json())
+            .then((d) => (ai.innerHTML = renderMarkdown(d.dronaVis.ans)))
+            .catch(() => (ai.innerHTML = "❌ Vision error"));
+        } else {
+          fd.append("query", text);
+          fetch("https://api.novosedge.xyz:4433/ad/v1.5/gyan", {
+            method: "POST",
+            headers: {
+              "X-API-KEY": "agridoot_2307e123cefd632b33b4ce9ff9bef7db",
+            },
+            body: fd,
           })
-          .catch(() => (vision_output.innerHTML = "❌ Vision failed"));
+            .then((r) => r.json())
+            .then((d) => (ai.innerHTML = renderMarkdown(d.dronaRes.ans)))
+            .catch(() => (ai.innerHTML = "❌ Chat error"));
+        }
       }
     </script>
   </body>
 </html>
-
-
