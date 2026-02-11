@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,45 +7,83 @@
     <title>AgriDoot Media Manager</title>
     <link rel="icon" type="image/x-icon" href="/img/agfav.ico" />
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Guard script -->
     <script src="/js/guard.js"></script>
   </head>
 
-  <body class="bg-gray-100 min-h-screen">
-    <div class="max-w-5xl mx-auto py-10 px-6">
-      <h1 class="text-3xl font-bold text-center mb-6">
-        AgriDoot - Media Manager
-      </h1>
-      <div class="bg-white shadow-xl rounded-2xl p-8 mb-10">
-        <h2 class="text-2xl font-bold text-green-700 mb-4">📤 Upload Media</h2>
-        <input
-          type="file"
-          id="mediaFile"
-          class="mb-4 w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-700 hover:file:bg-green-200"
-        />
-        <button
-          onclick="uploadFile()"
-          class="bg-green-600 text-white px-5 py-2 rounded-lg shadow hover:bg-green-700"
-        >
-          Upload
-        </button>
-        <p id="uploadStatus" class="mt-4 text-sm text-gray-600"></p>
+  <body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+    <div class="max-w-6xl mx-auto py-12 px-6">
+      <!-- Header -->
+      <div class="mb-12 text-center">
+        <h1 class="text-4xl font-bold text-gray-900">
+          AgriDoot <span class="text-green-600">Media Manager</span>
+        </h1>
+        <p class="text-gray-500 mt-2">Securely manage hosted media files</p>
       </div>
 
-      <div class="bg-white shadow-xl rounded-2xl p-8">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold text-blue-700">
-            🗄️ Hosted Media Files
-          </h2>
+      <!-- Upload Section -->
+      <div class="bg-white shadow-lg rounded-2xl p-8 mb-12 border">
+        <h2 class="text-2xl font-semibold text-green-600 mb-6">Upload Media</h2>
+
+        <div
+          id="dropZone"
+          class="border-2 border-dashed border-green-400 rounded-xl p-8 text-center cursor-pointer hover:bg-green-50 transition"
+        >
+          <input type="file" id="mediaFile" multiple class="hidden" />
+          <p class="text-gray-600">
+            Drag & Drop files or
+            <span class="text-green-600 font-semibold underline">Browse</span>
+          </p>
+          <p class="text-sm text-gray-400 mt-2">Max size per file: 500MB</p>
+        </div>
+
+        <!-- Selected Files Preview -->
+        <div
+          id="selectedFiles"
+          class="mt-4 space-y-2 text-sm text-gray-600"
+        ></div>
+
+        <!-- Upload Button -->
+        <button
+          id="uploadBtn"
+          onclick="uploadMultipleFiles()"
+          class="mt-6 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow transition disabled:opacity-50"
+          disabled
+        >
+          Upload Files
+        </button>
+
+        <div id="uploadList" class="mt-4 space-y-2 text-sm"></div>
+      </div>
+
+      <!-- Media Section -->
+      <div class="bg-white shadow-lg rounded-2xl p-8 border">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-semibold text-blue-600">Media Library</h2>
           <button
             onclick="loadMedia()"
-            class="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm shadow"
           >
-            🔄 Refresh
+            Refresh
           </button>
         </div>
-        <div id="mediaContainer" class="space-y-10"></div>
+
+        <div
+          id="folderView"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6"
+        ></div>
+
+        <div id="filesView" class="hidden">
+          <button
+            onclick="showFolders()"
+            class="mb-6 text-sm text-blue-600 hover:underline"
+          >
+            ← Back to Folders
+          </button>
+          <div
+            id="mediaGrid"
+            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6"
+          ></div>
+        </div>
       </div>
     </div>
 
@@ -53,91 +91,234 @@
       const API_URL = "https://apiv2.agridoot.co.in:12443/ad/v2/media";
       const API_KEY = "agridoot_2307e123cefd632b33b4ce9ff9bef7db";
 
-      function uploadFile() {
-        const fileInput = document.getElementById("mediaFile");
-        const file = fileInput.files[0];
-        if (!file) return alert("Select a file first!");
-        if (file.size > 500 * 1024 * 1024)
-          return alert("File must be under 500MB.");
+      let mediaData = {};
+      let selectedFiles = [];
 
-        const formData = new FormData();
-        formData.append("media", file);
-        document.getElementById("uploadStatus").innerText = "Uploading...";
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("mediaFile");
+      const selectedFilesDiv = document.getElementById("selectedFiles");
+      const uploadBtn = document.getElementById("uploadBtn");
 
-        fetch(API_URL, {
-          method: "POST",
-          headers: { "x-api-key": API_KEY },
-          body: formData,
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            const status = document.getElementById("uploadStatus");
-            if (data.response_status) {
-              status.innerText = "✅ Upload successful!";
-              loadMedia();
-            } else {
-              status.innerText = "❌ " + data.response_message;
-            }
-          })
-          .catch(
-            (err) =>
-              (document.getElementById("uploadStatus").innerText =
-                "❌ Error: " + err)
-          );
+      /* -------------------------
+     Drag & Drop Handling
+  ------------------------- */
+
+      dropZone.addEventListener("click", () => fileInput.click());
+
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("bg-green-100");
+      });
+
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("bg-green-100");
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("bg-green-100");
+        handleFiles(e.dataTransfer.files);
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        handleFiles(e.target.files);
+      });
+
+      function handleFiles(files) {
+        selectedFiles = Array.from(files);
+        renderSelectedFiles();
       }
 
-      function loadMedia() {
-        const container = document.getElementById("mediaContainer");
-        container.innerHTML = '<p class="text-gray-500">Loading...</p>';
+      function renderSelectedFiles() {
+        selectedFilesDiv.innerHTML = "";
 
+        if (!selectedFiles.length) {
+          uploadBtn.disabled = true;
+          return;
+        }
+
+        uploadBtn.disabled = false;
+
+        selectedFiles.forEach((file) => {
+          selectedFilesDiv.innerHTML += `
+        <div class="flex justify-between bg-gray-50 p-2 rounded border text-sm">
+          <span>${file.name}</span>
+          <span class="text-gray-400">
+            ${(file.size / (1024 * 1024)).toFixed(2)} MB
+          </span>
+        </div>
+      `;
+        });
+      }
+
+      /* -------------------------
+     Upload Logic (Manual)
+  ------------------------- */
+
+      async function uploadMultipleFiles() {
+        if (!selectedFiles.length) return;
+
+        const uploadList = document.getElementById("uploadList");
+        uploadList.innerHTML = "";
+        uploadBtn.disabled = true;
+
+        for (const file of selectedFiles) {
+          if (file.size > 500 * 1024 * 1024) {
+            uploadList.innerHTML += `
+          <div class="text-red-600">
+            ${file.name} - File too large
+          </div>
+        `;
+            continue;
+          }
+
+          const row = document.createElement("div");
+          row.innerText = `Uploading ${file.name}...`;
+          uploadList.appendChild(row);
+
+          const formData = new FormData();
+          formData.append("media", file);
+
+          try {
+            const res = await fetch(API_URL, {
+              method: "POST",
+              headers: { "x-api-key": API_KEY },
+              body: formData,
+            });
+
+            const data = await res.json();
+
+            if (data.response_status) {
+              row.innerHTML = `✅ ${file.name} uploaded`;
+            } else {
+              row.innerHTML = `❌ ${file.name} - ${data.response_message}`;
+            }
+          } catch (err) {
+            row.innerHTML = `❌ ${file.name} - Upload failed`;
+          }
+        }
+
+        // Reset selection
+        selectedFiles = [];
+        selectedFilesDiv.innerHTML = "";
+        uploadBtn.disabled = true;
+
+        loadMedia();
+      }
+
+      /* -------------------------
+     Load Media
+  ------------------------- */
+
+      function loadMedia() {
         fetch(API_URL, {
           method: "POST",
           headers: { "x-api-key": API_KEY },
         })
           .then((res) => res.json())
           .then((data) => {
-            if (!data.response_status)
-              return (container.innerHTML =
-                '<p class="text-red-600">Failed to load media.</p>');
+            if (!data.response_status) return alert("Failed to load media.");
+            mediaData = data.mediaList;
+            renderFolders();
+          });
+      }
 
-            const media = data.mediaList;
-            container.innerHTML = "";
-            for (const category in media) {
-              const files = media[category];
-              if (!files.length) continue;
+      /* -------------------------
+     Render Folders
+  ------------------------- */
 
-              const section = document.createElement("div");
-              section.innerHTML = `<h3 class="text-xl font-semibold mb-3 text-gray-800">📂 ${category.toUpperCase()}</h3>`;
-              const grid = document.createElement("div");
-              grid.className =
-                "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4";
+      function renderFolders() {
+        const folderView = document.getElementById("folderView");
+        folderView.innerHTML = "";
 
-              files.forEach((file) => {
-                let el;
-                if (category === "images") {
-                  el = `<img src="${file.mediaLink}" class="rounded-lg shadow border" />`;
-                } else if (category === "videos") {
-                  el = `<video src="${file.mediaLink}" controls class="rounded-lg shadow border"></video>`;
-                } else if (category === "audios") {
-                  el = `<audio src="${file.mediaLink}" controls class="w-full"></audio>`;
-                } else {
-                  el = `<a href="${file.mediaLink}" target="_blank" class="text-blue-600 underline">${file.filename}</a>`;
-                }
-                grid.innerHTML += `<div>${el}</div>`;
-              });
+        const icons = {
+          documents: "📄",
+          images: "🖼️",
+          videos: "🎬",
+          audios: "🎵",
+          others: "📦",
+        };
 
-              section.appendChild(grid);
-              container.appendChild(section);
-            }
-          })
-          .catch(
-            (err) =>
-              (container.innerHTML = `<p class="text-red-600">Error: ${err}</p>`)
-          );
+        for (const category in mediaData) {
+          const files = mediaData[category];
+          if (!files || !files.length) continue;
+
+          const icon = icons[category.toLowerCase()] || "📁";
+
+          folderView.innerHTML += `
+        <div onclick="openFolder('${category}')"
+          class="cursor-pointer bg-gray-100 hover:bg-blue-50 border rounded-xl p-6 text-center shadow-sm transition transform hover:-translate-y-1 hover:shadow-md">
+
+          <div class="text-5xl mb-3">${icon}</div>
+
+          <div class="font-semibold text-gray-700 uppercase tracking-wide">
+            ${category}
+          </div>
+
+          <div class="text-sm text-gray-500 mt-1">
+            ${files.length} ${files.length === 1 ? "file" : "files"}
+          </div>
+        </div>
+      `;
+        }
+
+        document.getElementById("filesView").classList.add("hidden");
+        folderView.classList.remove("hidden");
+      }
+
+      /* -------------------------
+     Open Folder
+  ------------------------- */
+
+      function openFolder(category) {
+        const files = mediaData[category];
+        const grid = document.getElementById("mediaGrid");
+        grid.innerHTML = "";
+
+        files.forEach((file) => {
+          let content;
+
+          if (category === "images") {
+            content = `<img src="${file.mediaLink}" class="rounded-lg shadow border mb-3" />`;
+          } else if (category === "videos") {
+            content = `<video src="${file.mediaLink}" controls class="rounded-lg shadow border mb-3"></video>`;
+          } else if (category === "audios") {
+            content = `<audio src="${file.mediaLink}" controls class="w-full mb-3"></audio>`;
+          } else {
+            content = `<div class="mb-3 break-all">${file.filename}</div>`;
+          }
+
+          grid.innerHTML += `
+        <div class="bg-gray-50 p-4 rounded-xl border shadow-sm">
+          ${content}
+          <div class="flex justify-between items-center text-sm">
+            <a href="${file.mediaLink}" target="_blank"
+              class="text-blue-600 hover:underline">Open</a>
+
+            <button onclick="copyLink('${file.mediaLink}')"
+              class="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-xs">
+              Copy Link
+            </button>
+          </div>
+        </div>
+      `;
+        });
+
+        document.getElementById("folderView").classList.add("hidden");
+        document.getElementById("filesView").classList.remove("hidden");
+      }
+
+      function showFolders() {
+        renderFolders();
+      }
+
+      function copyLink(link) {
+        navigator.clipboard.writeText(link).then(() => {
+          alert("Link copied!");
+        });
       }
 
       window.onload = loadMedia;
     </script>
   </body>
 </html>
-
