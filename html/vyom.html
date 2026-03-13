@@ -1196,6 +1196,7 @@
         .getElementById("tileForm")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
+
           const {
             polygonIdInput,
             indexDropdown,
@@ -1204,35 +1205,70 @@
             planVariantInput,
             loading,
           } = elements;
+
           loading.style.display = "inline";
+
           saveFormToLocalStorage();
+
           const polygon_id = polygonIdInput.value.trim();
           await fetchFarmList(polygon_id);
+
           const formData = new FormData();
           formData.append("user_id", "1");
           formData.append("polygon_id", polygonIdInput.value.trim());
           formData.append("index", indexDropdown.value.trim());
           formData.append("obs_date", obsDateInput.value);
           formData.append("satellite", satelliteTypeInput.value);
+
           const plan_variant = planVariantInput?.value?.trim() || "";
           if (plan_variant) formData.append("plan_variant", plan_variant);
+
+          const maxRetries = 5;
+          let attempt = 0;
+
           try {
-            const resp = await axios.post(`${novoBase}/gis/tiles`, formData, {
-              headers: {
-                "x-api-key": novoApiKey,
-              },
-              timeout: 10000,
-            });
+            let resp;
+
+            while (attempt < maxRetries) {
+              try {
+                resp = await axios.post(`${novoBase}/gis/tiles`, formData, {
+                  headers: {
+                    "x-api-key": novoApiKey,
+                  },
+                  timeout: 120000,
+                });
+
+                break; // success → exit retry loop
+              } catch (error) {
+                attempt++;
+
+                console.warn(
+                  `Tile fetch failed. Attempt ${attempt}/${maxRetries}`,
+                );
+
+                if (attempt >= maxRetries) {
+                  throw error;
+                }
+
+                // wait 2 seconds before retry
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+              }
+            }
+
             const data = resp.data || {};
             const tileList = data?.tileInfo?.tile_path;
+
             if (data.response_status && tileList && tileList.length > 0) {
               const bounds = tileList[0][1];
+
               const center = {
                 lat: (bounds[0][0] + bounds[1][0]) / 2,
                 lng: (bounds[0][1] + bounds[1][1]) / 2,
               };
+
               initMap(center);
               clearOverlays();
+
               tileList.forEach(([path, bounds]) => {
                 const tileUrl = novoBase + path.replace("./", "/");
                 addImageOverlay(tileUrl, bounds);
@@ -1241,8 +1277,8 @@
               alert("No tiles found for the given inputs.");
             }
           } catch (err) {
-            console.error("Error fetching tiles:", err);
-            alert("Failed to fetch data.");
+            console.error("Error fetching tiles after retries:", err);
+            alert("Failed to fetch data after multiple attempts.");
           } finally {
             loading.style.display = "none";
           }
@@ -1761,3 +1797,4 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   </body>
 </html>
+
